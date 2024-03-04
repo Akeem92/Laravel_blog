@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PropertyContactRequest;
 use App\Http\Requests\SearchPropertyRequest;
+use App\Mail\PropertyContactMail;
 use App\Models\Property;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class PropertyController extends Controller
 {
@@ -33,11 +35,18 @@ class PropertyController extends Controller
 
     public function show(string $slug, Property $property)
     {
-        $expectedSlug = $property->getSlug();
-        if ($slug !== $expectedSlug) {
+        $expectedSlug = trim($property->getSlug());
+        if (trim($slug) !== $expectedSlug) {
             return to_route('property.show', ['slug' => $expectedSlug, 'property' => $property]);
         }
 
         return view('property.show', ['property' => $property]);
+    }
+
+    public function contact(Property $property, PropertyContactRequest $request)
+    {
+        // dd($request);
+        Mail::send(new PropertyContactMail($property, $request->validated()));
+        return back()->with('success', 'Votre demande de contact a bien été envoyé.');
     }
 }
